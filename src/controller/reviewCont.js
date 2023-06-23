@@ -47,6 +47,7 @@ const reviews = async function (req, res) {
         }
         
         await Review.create(newData)
+        const updateBook = await Book.findByIdAndUpdate(bookId,{$inc : {reviews : 1}},{new : true});
 
 
         return res.status(200).send({status: true, data: newData });
@@ -124,17 +125,17 @@ const deleteReview = async function (req, res) {
         const bookId = req.params.bookId
 
         if (!isValidObjectId(bookId)) {
-            return res.status(400).send({status: false, message: "userId is not valid"});
+            return res.status(400).send({status: false, message: "bookId is not valid"});
         }
           
         if (!isValidObjectId(data)) {
-            return res.status(400).send({status: false, message: "userId is not valid"});
+            return res.status(400).send({status: false, message: "reviewedId is not valid"});
         }
         
         //checking the the book is present or not with that bookId
 
         const findBook = await Book.findOne({_id : bookId, isDeleted : false});
-        if(!bookBook) {
+        if(!findBook) {
             return res.status(404).send({status: false, message: "data does not found according to bookId"});
         }
 
@@ -147,7 +148,7 @@ const deleteReview = async function (req, res) {
 
 
         //check userID is exist in userModel or not 
-        const findReview = await Review.findByIdAndUpdate({data},{$set : {isDeleted : true}},{new : true});
+        const findReview = await Review.findByIdAndUpdate(data,{$set : {isDeleted : true}},{new : true});
 
 
         return res.status(200).send({status: true, data: findReview });

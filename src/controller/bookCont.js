@@ -95,7 +95,7 @@ const getBookById = async function (req, res) {
         const data = req.params.bookId
         console.log(data)
         if (!isValidObjectId(data)) {
-            return res.status(400).send({status: false, message: "userId is not valid"});
+            return res.status(400).send({status: false, message: "bookId is not valid"});
         }
 
         //check userID is exist in userModel or not 
@@ -201,7 +201,7 @@ const deleteBook = async function (req, res) {
         const bookId = req.params.bookId
 
         if (!isValidObjectId(bookId)) {
-            return res.status(400).send({status: false, message: "userId is not valid"});
+            return res.status(400).send({status: false, message: "bookId is not valid"});
         }
           
  

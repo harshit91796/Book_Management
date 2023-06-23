@@ -18,8 +18,8 @@ router.get('/books/:bookId',auth,getBookById);
 router.put('/books/:bookId',auth,updateAuthorisation,updateBook);
 router.delete('/books/:bookId',auth,updateAuthorisation,deleteBook);
 router.post('/books/:bookId/review',reviews);
-router.put('/books/:bookId/review',updateReviews);
-router.delete('/books/:bookId/review',deleteReview);
+router.put('/books/:bookId/review/:reviewId',updateReviews);
+router.delete('/books/:bookId/review/:reviewId',deleteReview);
 
 
 
