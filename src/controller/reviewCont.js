@@ -1,6 +1,6 @@
 const Book = require('../models/bookModel')
 const User = require('../models/userModel')
-const Review = require('../models/reviewCont')
+const Review = require('../models/reviewModel')
 const moment = require('moment');
 const { isValidObjectId } = require('mongoose');
 const isValid = function (value) {
@@ -12,23 +12,26 @@ const isValid = function (value) {
 const reviews = async function (req, res) {
     try {
         const data = req.params.bookId
-        const { reviewedBy , rating , review } = req.body
+        const { reviewedBy , rating , review,bookId } = req.body
         if (!isValidObjectId(data)) {
-            return res.status(400).send({status: false, message: "userId is not valid"});
+            return res.status(400).send({status: false, message: "bookId is not valid"});
         }
-        if (!isValidObjectId(reviewedBy)) {
-            return res.status(400).send({status: false, message: "userId is not valid"});
+        if (!isValid(reviewedBy)) {
+            return res.status(400).send({status: false, message: "reviewedby is not valid"});
         }
-        if (!isValidObjectId(rating)) {
-            return res.status(400).send({status: false, message: "userId is not valid"});
+        if (!isValid(rating)) {
+            return res.status(400).send({status: false, message: "rating is not valid"});
         }
-        if (!isValidObjectId(bookId)) {
+        if (!isValid(review)) {
+            return res.status(400).send({status: false, message: "review is not valid"});
+        }
+        if (!isValid(bookId)) {
             return res.status(400).send({status: false, message: "userId is not valid"});
         }
 
         //check userID is exist in userModel or not 
-        const findBook = await Book.findById({bookId : data, isDeleted : false});
-        if(!findUserId) {
+        const findBook = await Book.findById({_id : data, isDeleted : false});
+        if(!findBook) {
             return res.status(404).send({status: false, message: "data does not found according to bookId"});
         }
         
@@ -57,18 +60,37 @@ const updateReviews = async function (req, res) {
         const data = req.params.reviewId
         const bookId = req.params.bookId
         const { reviewedBy , rating , review } = req.body
+        let updateData = {};
         if (!isValidObjectId(data)) {
-            return res.status(400).send({status: false, message: "userId is not valid"});
-        }
-        if (!isValidObjectId(reviewedBy)) {
-            return res.status(400).send({status: false, message: "userId is not valid"});
-        }
-        if (!isValidObjectId(rating)) {
-            return res.status(400).send({status: false, message: "userId is not valid"});
+            return res.status(400).send({status: false, message: "bookId is not valid"});
         }
         if (!isValidObjectId(bookId)) {
-            return res.status(400).send({status: false, message: "userId is not valid"});
+            return res.status(400).send({status: false, message: "bookId is not valid"});
         }
+
+        if (reviewedBy) {
+            if (!isValid(reviewedBy)) {
+                return res.status(400).send({ status: false, message: "reviwedby is not Valid." });
+            }
+
+            updateData.reviewedBy = reviewedBy;
+        }
+
+        if (rating) {
+            if (!isValid(rating)) {
+                return res.status(400).send({ status: false, message: "rating is not Valid" });
+            }
+            updateData.rating = rating;
+        }
+
+        if (review) {
+            if (!isValid(review)) {
+                return res.status(400).send({ status: false, message: "review is not valid" });
+            }
+
+            updateData.review = review;
+        }
+
         
         //checking the the book is present or not with that bookId
 
@@ -86,7 +108,7 @@ const updateReviews = async function (req, res) {
 
 
         //check userID is exist in userModel or not 
-        const findReview = await Review.findByIdAndUpdate({data},{$set : {reviewedBy : reviewedBy , rating : rating, review : review}},{new : true});
+        const findReview = await Review.findByIdAndUpdate(data,updateData,{new : true});
 
 
 

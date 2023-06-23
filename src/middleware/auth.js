@@ -1,6 +1,6 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/userModel');
-const Blog = require('../models/blogsModel')
+const Book = require('../models/bookModel')
 const bcrypt = require('bcrypt')
 const { isValidObjectId } = require('mongoose');
 const isValid = function (value) {
@@ -15,7 +15,7 @@ async function hashpass(req,res,next){
         if(!req.body.password){
             res.status(400).send({msg : "password"})
          }
-         const pass = await bcrypt.hash(req.body.password,12)
+         const pass = await bcrypt.hash(req.body.password,8)
     
          req.body.password = pass
 
@@ -27,7 +27,8 @@ async function hashpass(req,res,next){
 
 async function auth(req,res,next){
     try {
-        const token = req.heders.x-api-key
+        const token = req.headers['x-api-key']
+        // console.log(token)
         if(!token){
             res.status(401).send({status : false , msg : "token is absent"})
         }
@@ -48,6 +49,7 @@ async function auth(req,res,next){
 async function Authorisation(req,res,next){
     try {
        const decodeId = req.decoded.userId
+       console.log(decodeId)
        const bodyId = req.body.userId
        if (!isValid(bodyId)) {
         return res.status(400).send({ status: false, message: "invalid id" });
@@ -84,7 +86,7 @@ async function updateAuthorisation(req,res,next){
         return res.status(404).send({status: false, message: "data does not found according to bookId"});
     }
 
-    if(decodeId != bodyId){
+    if(decodeId != bId.userId){
         return res.status(401).send({status: false, message: "user id does not match"});
     }
 

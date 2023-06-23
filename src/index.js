@@ -1,9 +1,11 @@
 const express = require('express')
 const app = express()
-const router = express.Router();
+const router = require('../src/routes/routes');
 const mongoose = require('mongoose')
 const dotenv = require('dotenv')
 dotenv.config()
+
+app.use(express.json())
 
 mongoose.connect(process.env.URI).then(()=>{
     console.log('database is connected')

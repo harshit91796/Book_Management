@@ -1,9 +1,14 @@
 const express = require('express');
 const {createUser,login} = require('../controller/userCont');
-const {createbook,createbook,getBook,getBookById,updateBook,deleteBook} = require('../controller/bookCont');
+const {createbook,getBook,getBookById,updateBook,deleteBook} = require('../controller/bookCont');
 const {reviews,updateReviews,deleteReview} = require('../controller/reviewCont');
 const {auth,Authorisation,updateAuthorisation, hashpass} = require('../middleware/auth');
 const router = express.Router();
+
+router.post('/hello',(req,res) =>{
+    console.log("helloooo")
+    res.send({msg : "gjygjjg"})
+})
 
 router.post('/register',hashpass, createUser);
 router.post('/login',login)

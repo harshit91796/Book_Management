@@ -1,6 +1,6 @@
 const Book = require('../models/bookModel')
 const User = require('../models/userModel')
-const Review = require('../models/reviewCont')
+const Review = require('../models/reviewModel')
 const moment = require('moment');
 const { isValidObjectId } = require('mongoose');
 const isValid = function (value) {
@@ -38,10 +38,11 @@ async function createbook(req,res){
         return res.status(400).send({ status: false, message: "invalid category" });
     }
     if (!isValid(releasedAt)) {
-        return res.status(400).send({ status: false, message: "invalid" });
+        return res.status(400).send({ status: false, message: "invalid1" });
     }
     //find book is already created or not 
-    const unique = await Book.findOne({ title: title }, { ISBN: ISBN });
+    const unique = await Book.findOne({ title: title ,  ISBN: ISBN });
+    console.log(unique)
     if (unique) {
         return re.status(400).send({ status: false, message: "Book is already exist" });
     }
@@ -78,20 +79,12 @@ const getBook = async function (req, res) {
 
         //find data
         const findData = await Book.find({...data ,isDeleted: false});
-        const newData = {
-            _id : findData._id,
-            title : findData.title,
-            excerpt : findData.excerpt,
-            userId : findData.userId,
-            category : findData.category,
-            Reviews : findData.Reviews,
-            releasedAt : findData.releasedAt
-
-        }
+        console.log(findData)
+        // console.log(newData)
         if(findData.length == 0) {
             return res.status(404).send({status: false, message: "page does not found"});
         }
-        return res.status(200).send({status: true, data: newData });
+        return res.status(200).send({status: true, data: findData });
     } catch (error) {
         return res.status(500).send({ status: false, message: error.message });
     }
@@ -100,12 +93,13 @@ const getBook = async function (req, res) {
 const getBookById = async function (req, res) {
     try {
         const data = req.params.bookId
+        console.log(data)
         if (!isValidObjectId(data)) {
             return res.status(400).send({status: false, message: "userId is not valid"});
         }
 
         //check userID is exist in userModel or not 
-        const findBook = await Book.findById({bookId : data, isDeleted : false});
+        const findBook = await Book.findOne({_id : data, isDeleted : false});
         if(!findBook) {
             return res.status(404).send({status: false, message: "data does not found according to bookId"});
         }
@@ -113,7 +107,7 @@ const getBookById = async function (req, res) {
         //find data
         const findReviews = await Review.find({bookId : data});
         const newData = {
-            ...findBook,
+            findBook,
             reviewsData : findReviews
 
         }
@@ -126,25 +120,62 @@ const getBookById = async function (req, res) {
 const updateBook = async function (req, res) {
     try {
         const bookId = req.params.bookId
+        console.log(bookId)
         const {  title, excerpt, ISBN , releasedAt } = req.body
-        if (!isValidObjectId(title)) {
-            return res.status(400).send({status: false, message: "title is not valid"});
+        let updateData = {};
+
+        if (title) {
+            if (!isValid(title)) {
+                return res.status(400).send({ status: false, message: "Title is not Valid." });
+            }
+
+            const checkTitle = await Book.findOne({ title: title });
+
+            if (checkTitle) {
+                return res.status(400).send({ status: false, message: `The title ${title} is already is in use for a Book.Try another one.` });
+            }
+
+            updateData.title = title;
         }
-        if (!isValidObjectId(excerpt)) {
-            return res.status(400).send({status: false, message: "excerpt is not valid"});
+
+        if (excerpt) {
+            if (!isValid(excerpt)) {
+                return res.status(400).send({ status: false, message: "Excerpt is not Valid" });
+            }
+            updateData.excerpt = excerpt;
         }
-        if (!isValidObjectId(ISBN)) {
-            return res.status(400).send({status: false, message: "ISBN is not valid"});
+
+        if (ISBN) {
+            if (!isValid(ISBN)) {
+                return res.status(400).send({ status: false, message: "ISBN is not valid" });
+            }
+
+            if (!validateISBN(ISBN)) {
+                return res.status(400).send({ status: false, message: " Invalid ISBN number it should contain only 13 digits" });
+            }
+
+            const checkISBN = await Book.findOne({ ISBN: ISBN });
+
+            if (checkISBN) {
+                return res.status(400).send({ status: false, message: `The ISBN ${ISBN} is already is in use for a Book.Try another one.` });
+            }
+
+            updateData.ISBN = ISBN;
         }
-        if (!isValidObjectId(releasedAt)) {
-            return res.status(400).send({status: false, message: "releasedAt is not valid"});
+
+        if (releasedAt) {
+
+            if (!isValid(releasedAt)) {
+                return res.status(400).send({ status: false, message: "releasedAt must be in string" });
+            }
+
+            if (moment(releasedAt, "YYYY-MM-DD").format("YYYY-MM-DD") !== releasedAt) {
+                return res.status(400).send({ status: false, message: "Please enter the Date in the format of 'YYYY-MM-DD'." });
+            }
+
+            updateData.releasedAt = releasedAt;
         }
         
-        const trimReleasedAt = releasedAt.trim();
-    if (moment(trimReleasedAt, "YYYY-MM-DD").format("YYYY-MM-DD") !== trimReleasedAt) {
-        return res.status(400).send({ status: false, message: "Please enter the Date in the format of 'YYYY-MM-DD'." });
-
-    }
 
         //checking the the book is present or not with that bookId
 
@@ -155,7 +186,7 @@ const updateBook = async function (req, res) {
 
 
         //check userID is exist in userModel or not 
-        const updateBook = await Book.findByIdAndUpdate({bookId},{$set : {title : title ,excerpt : excerpt , ISBN : ISBN , releasedAt : releasedAt }},{new : true});
+        const updateBook = await Book.findByIdAndUpdate(bookId,updateData,{new : true});
 
 
 
@@ -177,13 +208,13 @@ const deleteBook = async function (req, res) {
         //checking the the book is present or not with that bookId
 
         const findBook = await Book.findOne({_id : bookId, isDeleted : false});
-        if(!bookBook) {
+        if(!findBook) {
             return res.status(404).send({status: false, message: "data does not found according to bookId"});
         }
 
 
         //check userID is exist in userModel or not 
-        const deleteBook = await Book.findByIdAndUpdate({bookId},{$set : {isDeleted : true}},{new : true});
+        const deleteBook = await Book.findByIdAndUpdate(bookId,{$set : {isDeleted : true}},{new : true});
 
 
         return res.status(200).send({status: true, data: deleteBook });
